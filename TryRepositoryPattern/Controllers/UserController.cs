@@ -1,20 +1,22 @@
 ﻿using System;
 using System.Collections.Generic;
 using System.Linq;
+using System.Net;
 using System.Web;
 using System.Web.Mvc;
 using TryRepositoryPattern.Models;
+using TryRepositoryPattern.Repository;
 
 namespace TryRepositoryPattern.Controllers
 {
     public class UserController : Controller
     {
-        private DataContext dbContext = new DataContext();
+        private UserRepository userRepo = new UserRepository();
 
         // GET: User
         public ActionResult List()
         {
-            return View(dbContext.Users.ToList());
+            return View(userRepo.List());
         }
 
         public ActionResult Create()
@@ -28,11 +30,36 @@ namespace TryRepositoryPattern.Controllers
         {
             if (ModelState.IsValid)
             {
-                dbContext.Users.Add(user);
-                dbContext.SaveChanges();
+                userRepo.Create(user);
                 return RedirectToAction("List");
             }
 
+            return View(user);
+        }
+
+        public ActionResult Edit(int? id)
+        {
+            if (id == null)
+            {
+                return new HttpStatusCodeResult(HttpStatusCode.BadRequest);
+            }
+            User user =  userRepo.List().ToList().Where(emp => emp.Id == id).FirstOrDefault();
+            if (user == null)
+            {
+                return HttpNotFound();
+            }
+            return View(user);
+        }
+
+        [HttpPost]
+        [ValidateAntiForgeryToken]
+        public ActionResult Edit([Bind(Include = "Username, Password")] User user)
+        {
+            if (ModelState.IsValid)
+            {
+                userRepo.Update(user);
+                return RedirectToAction("List");
+            }
             return View(user);
         }
     }

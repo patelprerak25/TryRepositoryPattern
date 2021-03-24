@@ -1,27 +1,26 @@
 ﻿using System;
 using System.Collections.Generic;
-using System.Data.Entity;
 using System.Linq;
 using System.Net;
 using System.Web;
 using System.Web.Mvc;
 using TryRepositoryPattern.Models;
+using TryRepositoryPattern.Repository;
 
 namespace TryRepositoryPattern.Controllers
 {
     public class EmployeeController : Controller
     {
-        private DataContext dbContext = new DataContext();
-
+        EmployeeRepository empRepo = new EmployeeRepository();
         // GET: Employee
         public ActionResult List()
         {
-            return View(dbContext.Employees.ToList());
+            return View(empRepo.List());
         }
 
         public ActionResult Detail(int id)
         {
-            Employee employee = dbContext.Employees.Single(emp => emp.ID == id);
+            Employee employee = empRepo.Get(id);
 
             return View(employee);
         }
@@ -37,8 +36,7 @@ namespace TryRepositoryPattern.Controllers
         {
             if (ModelState.IsValid)
             {
-                dbContext.Employees.Add(employee);
-                dbContext.SaveChanges();
+                empRepo.Create(employee);
                 return RedirectToAction("List");
             }
 
@@ -51,7 +49,7 @@ namespace TryRepositoryPattern.Controllers
             {
                 return new HttpStatusCodeResult(HttpStatusCode.BadRequest);
             }
-            Employee employee = dbContext.Employees.Find(id);
+            Employee employee = empRepo.List().ToList().Where(emp => emp.ID == id).FirstOrDefault();
             if (employee == null)
             {
                 return HttpNotFound();
@@ -65,12 +63,12 @@ namespace TryRepositoryPattern.Controllers
         {
             if (ModelState.IsValid)
             {
-                dbContext.Entry(employee).State = EntityState.Modified;
-                dbContext.SaveChanges();
+                empRepo.Update(employee);
                 return RedirectToAction("List");
             }
             return View(employee);
         }
 
+        
     }
 }
