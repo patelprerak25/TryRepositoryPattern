@@ -11,16 +11,16 @@ namespace TryRepositoryPattern.Controllers
 {
     public class EmployeeController : Controller
     {
-        EmployeeRepository empRepo = new EmployeeRepository();
+        private UnitOfWork unitOfWork = new UnitOfWork(new DataContext());
         // GET: Employee
         public ActionResult List()
         {
-            return View(empRepo.List());
+            return View(unitOfWork.EmployeeRepo.List());
         }
 
         public ActionResult Detail(int id)
         {
-            Employee employee = empRepo.Get(id);
+            Employee employee = unitOfWork.EmployeeRepo.Get(id);
 
             return View(employee);
         }
@@ -30,13 +30,19 @@ namespace TryRepositoryPattern.Controllers
             return View();
         }
 
+        //Used Unit of work feature for multiple repository query using single save command.
         [HttpPost]
         [ValidateAntiForgeryToken]
         public ActionResult Create([Bind(Include = "ID,FirstName,LastName,Gender,Salary")] Employee employee)
         {
             if (ModelState.IsValid)
             {
-                empRepo.Create(employee);
+                unitOfWork.EmployeeRepo.Create(employee);
+
+                User user = new User { Username = employee.FirstName, Password = employee.LastName };
+                unitOfWork.UserRepo.Create(user);
+
+                unitOfWork.Save();
                 return RedirectToAction("List");
             }
 
@@ -49,7 +55,7 @@ namespace TryRepositoryPattern.Controllers
             {
                 return new HttpStatusCodeResult(HttpStatusCode.BadRequest);
             }
-            Employee employee = empRepo.List().ToList().Where(emp => emp.ID == id).FirstOrDefault();
+            Employee employee = unitOfWork.EmployeeRepo.List().ToList().Where(emp => emp.ID == id).FirstOrDefault();
             if (employee == null)
             {
                 return HttpNotFound();
@@ -63,7 +69,8 @@ namespace TryRepositoryPattern.Controllers
         {
             if (ModelState.IsValid)
             {
-                empRepo.Update(employee);
+                unitOfWork.EmployeeRepo.Update(employee);
+                unitOfWork.Save();
                 return RedirectToAction("List");
             }
             return View(employee);

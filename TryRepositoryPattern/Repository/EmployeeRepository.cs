@@ -9,8 +9,12 @@ namespace TryRepositoryPattern.Repository
 {
     public class EmployeeRepository
     {
-        private DataContext dbContext = new DataContext();
+        private DataContext dbContext ;
 
+        public EmployeeRepository(DataContext _dbContext)
+        {
+            dbContext = _dbContext;
+        }
         public List<Employee> List()
         {
             return dbContext.Employees.ToList();
@@ -26,12 +30,15 @@ namespace TryRepositoryPattern.Repository
         public void Create(Employee employee)
         {
             dbContext.Employees.Add(employee);
-            dbContext.SaveChanges();
         }
 
         public void Update(Employee employee)
         {
             dbContext.Entry(employee).State = EntityState.Modified;
+        }
+
+        public void SaveChanges()
+        {
             dbContext.SaveChanges();
         }
     }

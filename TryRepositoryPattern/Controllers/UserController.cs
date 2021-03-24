@@ -11,12 +11,12 @@ namespace TryRepositoryPattern.Controllers
 {
     public class UserController : Controller
     {
-        private UserRepository userRepo = new UserRepository();
+        private UnitOfWork unitOfWork = new UnitOfWork(new DataContext());
 
         // GET: User
         public ActionResult List()
         {
-            return View(userRepo.List());
+            return View(unitOfWork.UserRepo.List());
         }
 
         public ActionResult Create()
@@ -30,7 +30,8 @@ namespace TryRepositoryPattern.Controllers
         {
             if (ModelState.IsValid)
             {
-                userRepo.Create(user);
+                unitOfWork.UserRepo.Create(user);
+                unitOfWork.Save();
                 return RedirectToAction("List");
             }
 
@@ -43,7 +44,7 @@ namespace TryRepositoryPattern.Controllers
             {
                 return new HttpStatusCodeResult(HttpStatusCode.BadRequest);
             }
-            User user =  userRepo.List().ToList().Where(emp => emp.Id == id).FirstOrDefault();
+            User user = unitOfWork.UserRepo.List().ToList().Where(emp => emp.Id == id).FirstOrDefault();
             if (user == null)
             {
                 return HttpNotFound();
@@ -57,7 +58,8 @@ namespace TryRepositoryPattern.Controllers
         {
             if (ModelState.IsValid)
             {
-                userRepo.Update(user);
+                unitOfWork.UserRepo.Update(user);
+                unitOfWork.Save();
                 return RedirectToAction("List");
             }
             return View(user);
